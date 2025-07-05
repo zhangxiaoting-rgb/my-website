@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式產品展示</title>
+    <style>
+        /* 基礎樣式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* 頁面容器 */
+        .page-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 頁面樣式 */
+        .page {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.8s ease;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 頁面內容 */
+        .page-content {
+            max-width: 800px;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #7f8c8d;
+        }
+        
+        /* 按鈕樣式 */
+        .btn {
+            padding: 12px 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* 按鈕懸停特效 */
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .btn:focus:not(:active)::after {
+            animation: ripple 0.6s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        /* 導航按鈕 */
+        .nav-btn {
+            position: fixed;
+            bottom: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.1);
+            background-color: #1abc9c;
+        }
+        
+        .prev-btn {
+            left: 30px;
+        }
+        
+        .next-btn {
+            right: 30px;
+        }
+        
+        /* 頁面狀態 */
+        .page.active {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 10;
+        }
+        
+        .page.prev {
+            transform: translateX(-100%);
+            opacity: 0;
+            z-index: 1;
+        }
+        
+        .page.next {
+            transform: translateX(100%);
+            opacity: 0;
+            z-index: 1;
+        }
+        
+        /* 產品卡片 */
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px;
+            width: 250px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .product-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover .product-img {
+            transform: scale(1.05);
+        }
+        
+        .product-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .product-price {
+            font-size: 1.5rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        /* 頁面指示器 */
+        .page-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            z-index: 100;
+        }
+        
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #bdc3c7;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .indicator-dot.active {
+            background-color: #3498db;
+            transform: scale(1.2);
+        }
+        
+        /* 特殊動畫 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .delay-1 {
+            animation-delay: 0.2s;
+        }
+        
+        .delay-2 {
+            animation-delay: 0.4s;
+        }
+        
+        .delay-3 {
+            animation-delay: 0.6s;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- 首頁 -->
+        <div class="page active" id="page1">
+            <div class="page-content">
+                <h1 class="animate">歡迎來到我們的產品世界</h1>
+                <p class="animate delay-1">探索我們精心設計的高品質產品，為您的生活帶來更多便利與樂趣。</p>
+                <button class="btn animate delay-2">開始探索</button>
+            </div>
+        </div>
+        
+        <!-- 產品頁1 -->
+        <div class="page next" id="page2">
+            <div class="page-content">
+                <h1 class="animate">智能手錶系列</h1>
+                <p class="animate delay-1">隨時掌握健康數據，智能提醒，時尚設計。</p>
+                
+                <div class="product-card animate delay-2">
+                    <img src="https://via.placeholder.com/150" alt="智能手錶" class="product-img">
+                    <h3 class="product-title">智能手錶 Pro</h3>
+                    <div class="product-price">$299</div>
+                    <button class="btn">了解更多</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 產品頁2 -->
+        <div class="page next" id="page3">
+            <div class="page-content">
+                <h1 class="animate">無線耳機系列</h1>
+                <p class="animate delay-1">高品質音效，降噪技術，持久續航。</p>
+                
+                <div class="product-card animate delay-2">
+                    <img src="https://via.placeholder.com/150" alt="無線耳機" class="product-img">
+                    <h3 class="product-title">降噪耳機 Air</h3>
+                    <div class="product-price">$199</div>
+                    <button class="btn">了解更多</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 聯繫頁 -->
+        <div class="page next" id="page4">
+            <div class="page-content">
+                <h1 class="animate">聯繫我們</h1>
+                <p class="animate delay-1">有任何問題或建議？我們隨時為您服務。</p>
+                
+                <form class="animate delay-2" style="max-width: 500px; width: 100%;">
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" placeholder="您的姓名" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <input type="email" placeholder="電子郵件" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <textarea placeholder="您的訊息" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; height: 150px;"></textarea>
+                    </div>
+                    <button class="btn" type="submit">發送訊息</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 導航按鈕 -->
+        <button class="nav-btn prev-btn" id="prevBtn">←</button>
+        <button class="nav-btn next-btn" id="nextBtn">→</button>
+        
+        <!-- 頁面指示器 -->
+        <div class="page-indicator">
+            <div class="indicator-dot active" data-page="1"></div>
+            <div class="indicator-dot" data-page="2"></div>
+            <div class="indicator-dot" data-page="3"></div>
+            <div class="indicator-dot" data-page="4"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pages = document.querySelectorAll('.page');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const dots = document.querySelectorAll('.indicator-dot');
+            let currentPage = 1;
+            const totalPages = pages.length;
+            
+            // 初始化動畫
+            setTimeout(() => {
+                document.querySelectorAll('.animate').forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+            }, 100);
+            
+            // 切換頁面函數
+            function goToPage(pageNum) {
+                // 檢查頁面範圍
+                if (pageNum < 1 || pageNum > totalPages) return;
+                
+                // 更新當前頁面
+                currentPage = pageNum;
+                
+                // 更新頁面狀態
+                pages.forEach((page, index) => {
+                    page.classList.remove('active', 'prev', 'next');
+                    
+                    if (index + 1 === pageNum) {
+                        page.classList.add('active');
+                    } else if (index + 1 < pageNum) {
+                        page.classList.add('prev');
+                    } else {
+                        page.classList.add('next');
+                    }
+                });
+                
+                // 更新指示器
+                dots.forEach(dot => {
+                    dot.classList.remove('active');
+                    if (parseInt(dot.dataset.page) === pageNum) {
+                        dot.classList.add('active');
+                    }
+                });
+                
+                // 重置動畫
+                document.querySelectorAll('.animate').forEach(el => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                });
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.page.active .animate').forEach((el, i) => {
+                        setTimeout(() => {
+                            el.style.opacity = '1';
+                            el.style.transform = 'translateY(0)';
+                        }, i * 200);
+                    });
+                }, 300);
+            }
+            
+            // 上一頁按鈕
+            prevBtn.addEventListener('click', () => {
+                goToPage(currentPage - 1);
+            });
+            
+            // 下一頁按鈕
+            nextBtn.addEventListener('click', () => {
+                goToPage(currentPage + 1);
+            });
+            
+            // 點擊指示器切換頁面
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const pageNum = parseInt(dot.dataset.page);
+                    goToPage(pageNum);
+                });
+            });
+            
+            // 鍵盤控制
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    goToPage(currentPage - 1);
+                } else if (e.key === 'ArrowRight') {
+                    goToPage(currentPage + 1);
+                }
+            });
+            
+            // 按鈕波紋效果
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 創建波紋元素
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    this.appendChild(ripple);
+                    
+                    // 設置波紋位置
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    ripple.style.left = `${x}px`;
+                    ripple.style.top = `${y}px`;
+                    
+                    // 移除波紋
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
